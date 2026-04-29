@@ -199,22 +199,65 @@ class AuthController extends Controller
 
     private function buildMenuTree($menuList)
     {
+        if (!is_array($menuList) || empty($menuList)) {
+            return [];
+        }
+
         $map = [];
         foreach ($menuList as $menu) {
+            if (!is_array($menu) || !isset($menu['id'])) {
+                continue;
+            }
+            $menu['children'] = [];
             $map[$menu['id']] = $menu;
-            $map[$menu['id']]['children'] = [];
         }
 
         $tree = [];
+        $parentIds = [];
+        
         foreach ($menuList as $menu) {
-            if ($menu['parent_id'] == 0) {
-                $tree[] = &$map[$menu['id']];
-            } else if (isset($map[$menu['parent_id']])) {
-                $map[$menu['parent_id']]['children'][] = &$map[$menu['id']];
+            if (!is_array($menu) || !isset($menu['id'])) {
+                continue;
+            }
+            
+            $id = $menu['id'] ?? 0;
+            $parentId = $menu['parent_id'] ?? 0;
+            
+            $parentIds[$parentId] = true;
+            
+            if ($parentId == 0) {
+                if (isset($map[$id])) {
+                    $tree[] = &$map[$id];
+                }
+            } else if (isset($map[$parentId])) {
+                if (isset($map[$id])) {
+                    $map[$parentId]['children'][] = &$map[$id];
+                }
             }
         }
 
+        $this->sortMenuTree($tree);
+        
         return $tree;
+    }
+
+    private function sortMenuTree(&$tree)
+    {
+        if (!is_array($tree)) {
+            return;
+        }
+        
+        usort($tree, function ($a, $b) {
+            $sortA = $a['sort'] ?? 0;
+            $sortB = $b['sort'] ?? 0;
+            return $sortA - $sortB;
+        });
+        
+        foreach ($tree as &$item) {
+            if (isset($item['children']) && !empty($item['children'])) {
+                $this->sortMenuTree($item['children']);
+            }
+        }
     }
 
     private function getClientIP()
