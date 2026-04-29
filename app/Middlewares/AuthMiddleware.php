@@ -7,16 +7,33 @@ use Core\Database;
 
 class AuthMiddleware
 {
+    private function getAuthorizationHeader()
+    {
+        $header = null;
+
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $header = $_SERVER['HTTP_AUTHORIZATION'];
+        } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $header = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        } elseif (function_exists('getallheaders')) {
+            $headers = getallheaders();
+            if (isset($headers['Authorization'])) {
+                $header = $headers['Authorization'];
+            } elseif (isset($headers['authorization'])) {
+                $header = $headers['authorization'];
+            }
+        }
+
+        if (empty($header) && isset($_SERVER['PHP_AUTH_USER'])) {
+            $header = 'Basic ' . base64_encode($_SERVER['PHP_AUTH_USER'] . ':' . ($_SERVER['PHP_AUTH_PW'] ?? ''));
+        }
+
+        return $header;
+    }
+
     public function handle()
     {
-        $headers = getallheaders();
-        $authHeader = '';
-
-        if (isset($headers['Authorization'])) {
-            $authHeader = $headers['Authorization'];
-        } elseif (isset($headers['authorization'])) {
-            $authHeader = $headers['authorization'];
-        }
+        $authHeader = $this->getAuthorizationHeader();
 
         if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
             $this->errorResponse(401, '未授权，请先登录');

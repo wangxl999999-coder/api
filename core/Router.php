@@ -67,6 +67,18 @@ class Router
         $path = rtrim($path, '/');
         $path = $path === '' ? '/' : $path;
 
+        $scriptName = dirname($_SERVER['SCRIPT_NAME']);
+        if ($scriptName !== '/' && $scriptName !== '\\') {
+            $path = preg_replace('#^' . preg_quote($scriptName, '#') . '#', '', $path);
+            $path = rtrim($path, '/');
+            $path = $path === '' ? '/' : $path;
+        }
+
+        if (strpos($path, '/public') === 0) {
+            $path = substr($path, 7);
+            $path = $path === '' ? '/' : $path;
+        }
+
         foreach ($this->routes as $route) {
             if ($route['method'] !== $method) {
                 continue;
