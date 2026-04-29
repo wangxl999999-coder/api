@@ -132,10 +132,42 @@ server {
 }
 ```
 
-### 3. 默认账号
+### 3. 初始化管理员密码
+
+⚠️ **重要**：数据库中的默认密码哈希需要通过以下方式正确设置：
+
+**方法一：使用密码重置脚本（推荐）**
+
+1. 确保配置了正确的数据库连接
+2. 访问：`http://your-domain/reset_password.php`
+3. 输入新密码（默认填 `admin123`）并提交
+4. **安全提示**：重置成功后请删除 `public/reset_password.php` 文件
+
+**方法二：使用安装向导**
+
+访问：`http://your-domain/install.php`
+
+- 可测试数据库连接
+- 可导入数据库结构
+- 可更新管理员密码
+
+**方法三：手动执行SQL**
+
+```php
+<?php
+// 运行此PHP脚本生成密码哈希
+$password = 'admin123';
+$hash = password_hash($password, PASSWORD_BCRYPT);
+echo "UPDATE admins SET password = '$hash' WHERE username = 'admin';";
+?>
+```
+
+然后在MySQL中执行生成的SQL语句。
+
+### 4. 默认账号
 
 - 用户名：`admin`
-- 密码：`admin123`
+- 密码：`admin123`（需先按上述方法设置）
 
 ## 访问地址
 
@@ -257,6 +289,62 @@ const users = (await usersRes.json()).data;
 - 实现登录日志记录
 - 实现基本配置管理
 - 实现管理后台界面
+
+## 常见问题
+
+### Q1: 登录提示"用户名或密码错误"
+
+**原因**：数据库中默认的密码哈希 `$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi` 对应的明文是 `password`，而非 `admin123`。
+
+**解决**：
+1. 访问 `http://your-domain/reset_password.php`
+2. 使用密码重置工具设置新密码为 `admin123`
+3. 或临时使用 `password` 登录后在后台修改密码
+
+### Q2: API接口返回404 Not Found
+
+**原因**：URL重写未正确配置。
+
+**解决**：
+
+**Apache用户**：
+1. 确保 `mod_rewrite` 模块已启用
+2. 确保 `AllowOverride All` 已配置
+3. 项目根目录和 `public` 目录已包含 `.htaccess` 文件
+
+**Nginx用户**：
+请在Nginx配置中添加：
+```nginx
+location / {
+    try_files $uri $uri/ /index.php?$query_string;
+}
+```
+
+### Q3: 访问受保护接口提示"未授权，请先登录"
+
+**原因**：请求中缺少有效的JWT Token。
+
+**解决**：
+1. 先调用 `POST /api/auth/login` 获取Token
+2. 在后续请求的Header中添加：
+```
+Authorization: Bearer {你的Token}
+```
+
+### Q4: 如何确认Web服务器配置正确？
+
+**测试步骤**：
+1. 访问 `http://your-domain/install.php` - 应该显示安装向导页面
+2. 访问 `http://your-domain/admin` - 应该显示登录页面
+3. 如果直接访问 `http://your-domain/public/admin` 才能看到页面，说明网站根目录未正确指向 `public` 目录
+
+### Q5: 数据库连接失败
+
+**检查项**：
+1. 确认MySQL服务正在运行
+2. 确认 `config/config.php` 中的数据库配置正确
+3. 确认数据库 `api_system` 已创建
+4. 确认数据库用户有正确的权限
 
 ## License
 
