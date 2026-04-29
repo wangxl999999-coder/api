@@ -62,48 +62,66 @@ class Router
 
     public function dispatch()
     {
-        $method = $_SERVER['REQUEST_METHOD'];
-        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $path = rtrim($path, '/');
-        $path = $path === '' ? '/' : $path;
-
-        $scriptName = dirname($_SERVER['SCRIPT_NAME']);
-        if ($scriptName !== '/' && $scriptName !== '\\') {
-            $path = preg_replace('#^' . preg_quote($scriptName, '#') . '#', '', $path);
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
             $path = rtrim($path, '/');
             $path = $path === '' ? '/' : $path;
-        }
 
-        if (strpos($path, '/public') === 0) {
-            $path = substr($path, 7);
-            $path = $path === '' ? '/' : $path;
-        }
-
-        foreach ($this->routes as $route) {
-            if ($route['method'] !== $method) {
-                continue;
+            $scriptName = dirname($_SERVER['SCRIPT_NAME']);
+            if ($scriptName !== '/' && $scriptName !== '\\') {
+                $path = preg_replace('#^' . preg_quote($scriptName, '#') . '#', '', $path);
+                $path = rtrim($path, '/');
+                $path = $path === '' ? '/' : $path;
             }
 
-            $pattern = $this->convertPathToPattern($route['path']);
-            if (preg_match($pattern, $path, $matches)) {
-                $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
-                
-                foreach ($route['middlewares'] as $middleware) {
-                    $middlewareClass = "App\\Middlewares\\" . $middleware;
-                    if (class_exists($middlewareClass)) {
-                        $middlewareInstance = new $middlewareClass();
-                        $result = $middlewareInstance->handle();
-                        if ($result !== true) {
-                            return $result;
-                        }
-                    }
+            if (strpos($path, '/public') === 0) {
+                $path = substr($path, 7);
+                $path = $path === '' ? '/' : $path;
+            }
+
+            foreach ($this->routes as $route) {
+                if ($route['method'] !== $method) {
+                    continue;
                 }
 
-                return $this->executeHandler($route['handler'], $params);
-            }
-        }
+                $pattern = $this->convertPathToPattern($route['path']);
+                if (preg_match($pattern, $path, $matches)) {
+                    $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+                    
+                    foreach ($route['middlewares'] as $middleware) {
+                        $middlewareClass = "App\\Middlewares\\" . $middleware;
+                        if (class_exists($middlewareClass)) {
+                            $middlewareInstance = new $middlewareClass();
+                            $result = $middlewareInstance->handle();
+                            if ($result !== true) {
+                                return $result;
+                            }
+                        }
+                    }
 
-        return $this->errorResponse(404, 'Not Found');
+                    return $this->executeHandler($route['handler'], $params);
+                }
+            }
+
+            return $this->errorResponse(404, '接口不存在: ' . $method . ' ' . $path);
+        } catch (\Exception $e) {
+            $debugInfo = [];
+            $config = require __DIR__ . '/../config/config.php';
+            $isDebug = $config['app']['debug'] ?? false;
+            
+            if ($isDebug) {
+                $debugInfo = [
+                    'exception' => get_class($e),
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ];
+            }
+            
+            return $this->errorResponse(500, '服务器内部错误' . ($isDebug ? ': ' . $e->getMessage() : ''), $debugInfo);
+        }
     }
 
     private function convertPathToPattern($path)

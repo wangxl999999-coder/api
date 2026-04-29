@@ -138,47 +138,47 @@ INSERT INTO roles (name, code, description, sort) VALUES
 INSERT INTO admins (username, nickname, password, role_id, is_super, status) VALUES 
 ('admin', '超级管理员', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, 1, 1);
 
--- 创建权限数据
-INSERT INTO permissions (parent_id, name, code, type, path, icon, component, sort) VALUES 
--- 系统管理
-(0, '系统管理', 'system', 1, '/system', 'setting', NULL, 1),
--- 管理员管理
-(1, '管理员管理', 'admin', 1, '/system/admin', 'user', 'system/admin/index', 1),
-(2, '查看管理员列表', 'admin:list', 2, NULL, NULL, NULL, 1),
-(2, '添加管理员', 'admin:add', 2, NULL, NULL, NULL, 2),
-(2, '编辑管理员', 'admin:edit', 2, NULL, NULL, NULL, 3),
-(2, '删除管理员', 'admin:delete', 2, NULL, NULL, NULL, 4),
--- 角色管理
-(1, '角色管理', 'role', 1, '/system/role', 'team', 'system/role/index', 2),
-(7, '查看角色列表', 'role:list', 2, NULL, NULL, NULL, 1),
-(7, '添加角色', 'role:add', 2, NULL, NULL, NULL, 2),
-(7, '编辑角色', 'role:edit', 2, NULL, NULL, NULL, 3),
-(7, '删除角色', 'role:delete', 2, NULL, NULL, NULL, 4),
-(7, '分配权限', 'role:permission', 2, NULL, NULL, NULL, 5),
--- 权限管理
-(1, '权限管理', 'permission', 1, '/system/permission', 'key', 'system/permission/index', 3),
-(13, '查看权限列表', 'permission:list', 2, NULL, NULL, NULL, 1),
-(13, '添加权限', 'permission:add', 2, NULL, NULL, NULL, 2),
-(13, '编辑权限', 'permission:edit', 2, NULL, NULL, NULL, 3),
-(13, '删除权限', 'permission:delete', 2, NULL, NULL, NULL, 4),
--- 登录日志
-(0, '日志管理', 'log', 1, '/log', 'file', NULL, 2),
-(18, '登录日志', 'login_log', 1, '/log/login', 'login', 'log/login/index', 1),
-(19, '查看登录日志', 'login_log:list', 2, NULL, NULL, NULL, 1),
-(19, '删除登录日志', 'login_log:delete', 2, NULL, NULL, NULL, 2),
--- 配置管理
-(0, '配置管理', 'config', 1, '/config', 'setting', NULL, 3),
-(22, '基本配置', 'basic_config', 1, '/config/basic', 'setting', 'config/basic/index', 1),
-(23, '查看配置', 'config:list', 2, NULL, NULL, NULL, 1),
-(23, '编辑配置', 'config:edit', 2, NULL, NULL, NULL, 2),
--- 用户管理
-(0, '用户管理', 'user_manage', 1, '/user', 'user', NULL, 4),
-(26, '用户列表', 'user', 1, '/user/list', 'user', 'user/index', 1),
-(27, '查看用户列表', 'user:list', 2, NULL, NULL, NULL, 1),
-(27, '添加用户', 'user:add', 2, NULL, NULL, NULL, 2),
-(27, '编辑用户', 'user:edit', 2, NULL, NULL, NULL, 3),
-(27, '删除用户', 'user:delete', 2, NULL, NULL, NULL, 4),
-(27, '查看用户详情', 'user:view', 2, NULL, NULL, NULL, 5);
+-- 创建权限数据 (显式指定ID以确保parent_id引用正确)
+INSERT INTO permissions (id, parent_id, name, code, type, path, icon, component, sort) VALUES 
+-- 系统管理 (id=1)
+(1, 0, '系统管理', 'system', 1, '/system', 'setting', NULL, 1),
+-- 管理员管理 (id=2, parent_id=1)
+(2, 1, '管理员管理', 'admin', 1, '/system/admin', 'user', 'system/admin/index', 1),
+(3, 2, '查看管理员列表', 'admin:list', 2, NULL, NULL, NULL, 1),
+(4, 2, '添加管理员', 'admin:add', 2, NULL, NULL, NULL, 2),
+(5, 2, '编辑管理员', 'admin:edit', 2, NULL, NULL, NULL, 3),
+(6, 2, '删除管理员', 'admin:delete', 2, NULL, NULL, NULL, 4),
+-- 角色管理 (id=7, parent_id=1)
+(7, 1, '角色管理', 'role', 1, '/system/role', 'team', 'system/role/index', 2),
+(8, 7, '查看角色列表', 'role:list', 2, NULL, NULL, NULL, 1),
+(9, 7, '添加角色', 'role:add', 2, NULL, NULL, NULL, 2),
+(10, 7, '编辑角色', 'role:edit', 2, NULL, NULL, NULL, 3),
+(11, 7, '删除角色', 'role:delete', 2, NULL, NULL, NULL, 4),
+(12, 7, '分配权限', 'role:permission', 2, NULL, NULL, NULL, 5),
+-- 权限管理 (id=13, parent_id=1)
+(13, 1, '权限管理', 'permission', 1, '/system/permission', 'key', 'system/permission/index', 3),
+(14, 13, '查看权限列表', 'permission:list', 2, NULL, NULL, NULL, 1),
+(15, 13, '添加权限', 'permission:add', 2, NULL, NULL, NULL, 2),
+(16, 13, '编辑权限', 'permission:edit', 2, NULL, NULL, NULL, 3),
+(17, 13, '删除权限', 'permission:delete', 2, NULL, NULL, NULL, 4),
+-- 日志管理 (id=18)
+(18, 0, '日志管理', 'log', 1, '/log', 'file', NULL, 2),
+(19, 18, '登录日志', 'login_log', 1, '/log/login', 'login', 'log/login/index', 1),
+(20, 19, '查看登录日志', 'login_log:list', 2, NULL, NULL, NULL, 1),
+(21, 19, '删除登录日志', 'login_log:delete', 2, NULL, NULL, NULL, 2),
+-- 配置管理 (id=22)
+(22, 0, '配置管理', 'config', 1, '/config', 'setting', NULL, 3),
+(23, 22, '基本配置', 'basic_config', 1, '/config/basic', 'setting', 'config/basic/index', 1),
+(24, 23, '查看配置', 'config:list', 2, NULL, NULL, NULL, 1),
+(25, 23, '编辑配置', 'config:edit', 2, NULL, NULL, NULL, 2),
+-- 用户管理 (id=26)
+(26, 0, '用户管理', 'user_manage', 1, '/user', 'user', NULL, 4),
+(27, 26, '用户列表', 'user', 1, '/user/list', 'user', 'user/index', 1),
+(28, 27, '查看用户列表', 'user:list', 2, NULL, NULL, NULL, 1),
+(29, 27, '添加用户', 'user:add', 2, NULL, NULL, NULL, 2),
+(30, 27, '编辑用户', 'user:edit', 2, NULL, NULL, NULL, 3),
+(31, 27, '删除用户', 'user:delete', 2, NULL, NULL, NULL, 4),
+(32, 27, '查看用户详情', 'user:view', 2, NULL, NULL, NULL, 5);
 
 -- 超级管理员角色关联权限 (全部权限)
 INSERT INTO role_permissions (role_id, permission_id)
